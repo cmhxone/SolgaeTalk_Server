@@ -50,11 +50,42 @@ class ServerSocket:
 		while self.__running:
 			try:
 				data = clientSocket.recv(self.__bufsize) # 클라이언트 소켓으로부터 메시지를 전달 받는다
-				print(data)
+
+				try:
+					message = struct.unpack("I512s", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
+				except:
+					self.DestroyClient(clientSocket)
+					print(addr, "과의 접속이 종료되었습니다")
+					break
+
 			except ConnectionResetError:	# 클라이언트가 비정상적으로 종료된 경우
-				print(addr, "과의 접속이 종료되었습니다");
-				break;
-			
+				self.DestroyClient(clientSocket)
+				print(addr, "과의 접속이 종료되었습니다")
+				break
+
+			# 메시지 수신 플래그는 5002, 이 플래그를 전송 받은경우 모든 클라이언트에 메시지를 출력해준다
+			if message[0] == 5002:
+				print(message[1].decode())
+
+			# 접속 플래그는 1996, 이 플래그를 전송 받은 경우 모든 클라이언트에 접속 메시지를 출력해준다
+			elif message[0] == 1996:
+				print(addr, "에서 정식 클라이언트를 통해 접속하였습니다")
+
+			# 이외의 검증되지 않은 플래그들은 접속을 종료한다
+			else:
+				self.DestroyClient(clientSocket)
+				print(addr, "과의 접속이 종료되었습니다")
+				break
+	
+	# 클라이언트 소켓을 할당 해제하는 함수
+	def DestroyClient(self, clientSocket):
+		self.__lock.acquire
+		try:
+			clientSocket.close()
+			self.__SocketList.remove(clientSocket)
+		except:
+			pass
+		self.__lock.release
 
 	# 서버를 실행하는 함수
 	def Start(self):
