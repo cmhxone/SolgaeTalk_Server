@@ -5,13 +5,13 @@ import struct	# 구조체 라이브러리 추가
 # 소켓 서버의 클래스를 선언한다
 class ServerSocket:
 	# 서버 소켓의 기본정보를 담는 클래스 멤버 변수선언
-	__socket = int	# 서버의 소켓
-	__port = int	# 포트 번호
-	__host  = str	# 호스트 이름 (URL or IP)
-	__bufsize = int	# 버퍼 크기
-	__running = bool # 실행 상태를 알려주는 변수
-	__lock = threading.Lock()	# 스레드 싱크로나이즈를 위한 스레드 제어 변수
-	__SocketList = []	# 접속한 클라이언트의 소켓을 저장할 배열
+	__socket : int	# 서버의 소켓
+	__port : int	# 포트 번호
+	__host : str	# 호스트 이름 (URL or IP)
+	__bufsize : int	# 버퍼 크기
+	__running : bool # 실행 상태를 알려주는 변수
+	__lock : threading.Lock	# 스레드 싱크로나이즈를 위한 스레드 제어 변수
+	__SocketList : []	# 접속한 클라이언트의 소켓을 저장할 배열
 
 	# 클래스 생성자 (인자값으로 포트, 호스트주소, 버퍼크기를 전달)
 	def __init__(self, port, host, bufsize):
