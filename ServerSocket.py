@@ -52,7 +52,7 @@ class ServerSocket:
 				data = clientSocket.recv(self.__bufsize) # 클라이언트 소켓으로부터 메시지를 전달 받는다
 
 				try:
-					message = struct.unpack("I512s", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
+					message = struct.unpack("I32s512s", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
 				except:
 					self.DestroyClient(clientSocket)
 					print(addr, "과의 접속이 종료되었습니다")
@@ -65,11 +65,16 @@ class ServerSocket:
 
 			# 메시지 수신 플래그는 5002, 이 플래그를 전송 받은경우 모든 클라이언트에 메시지를 출력해준다
 			if message[0] == 5002:
-				print(message[1].decode())
+				print("[", message[1].decode().replace("\00", "") , "] ", message[2].decode() )
+				self.SendMessage(data)
 
 			# 접속 플래그는 1996, 이 플래그를 전송 받은 경우 모든 클라이언트에 접속 메시지를 출력해준다
 			elif message[0] == 1996:
 				print(addr, "에서 정식 클라이언트를 통해 접속하였습니다")
+				self.__lock.acquire
+				self.__SocketList.append(clientSocket)
+				self.__lock.release
+
 
 			# 이외의 검증되지 않은 플래그들은 접속을 종료한다
 			else:
@@ -84,6 +89,17 @@ class ServerSocket:
 			clientSocket.close()
 			self.__SocketList.remove(clientSocket)
 		except:
+			pass
+		self.__lock.release
+	
+	# 연결된 클라이언트 소켓에 메시지를 전달하는 함수
+	def SendMessage(self, data):
+		self.__lock.acquire
+		try:
+			for socket in self.__SocketList:
+				socket.send(data)
+		except:
+			print("Sending Failure")
 			pass
 		self.__lock.release
 
@@ -104,9 +120,6 @@ class ServerSocket:
 			if clientSocket in self.__SocketList:
 				pass
 			else:
-				self.__lock.acquire
-				self.__SocketList.append(clientSocket)
-				self.__lock.release
 				print(addr, "에서 접속하였습니다")
 				# 접속이 완료된 경우 별도의 스레드를 생성하여 메시지 처리를 관할한다
 				t = threading.Thread(target=self.ProcessMessage, args=(clientSocket, addr))
