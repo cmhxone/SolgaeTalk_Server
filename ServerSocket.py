@@ -11,7 +11,7 @@ class ServerSocket:
 	__bufsize : int	# 버퍼 크기
 	__running : bool # 실행 상태를 알려주는 변수
 	__lock : threading.Lock	# 스레드 싱크로나이즈를 위한 스레드 제어 변수
-	__SocketList : []	# 접속한 클라이언트의 소켓을 저장할 배열
+	__SocketList = []	# 접속한 클라이언트의 소켓을 저장할 배열
 
 	# 클래스 생성자 (인자값으로 포트, 호스트주소, 버퍼크기를 전달)
 	def __init__(self, port, host, bufsize):
