@@ -73,6 +73,7 @@ class ServerSocket:
 				print(addr, "에서 정식 클라이언트를 통해 접속하였습니다")
 				self.__lock.acquire
 				self.__SocketList.append(clientSocket)
+				self.SendMessage(data)
 				self.__lock.release
 
 
