@@ -1,6 +1,7 @@
 import socket	# 소켓 라이브러리 추가
 import threading	# 스레드 라이브러리 추가
 import struct	# 구조체 라이브러리 추가
+import pymysql	# MySQL 라이브러리 추가
 
 # 소켓 서버의 클래스를 선언한다
 class ServerSocket:
@@ -47,12 +48,31 @@ class ServerSocket:
 
 	# 클라이언트로부터 메시지를 읽어오는 함수
 	def ProcessMessage(self, clientSocket, addr):
+
+		nickname = str	# 클라이언트의 닉네임을 저장하는 변수
+		able = bool	# DB에 존재하는지 확인 후 사용가능한 클라이언트인지를 반환하는 부울 변수
+
 		while self.__running:
 			try:
 				data = clientSocket.recv(self.__bufsize) # 클라이언트 소켓으로부터 메시지를 전달 받는다
 
 				try:
 					message = struct.unpack("I32s512s", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
+					nickname = message[1].decode().replace("\0", "")	# 메시지를 분석 해 닉네임 값을 저장한다
+				
+					try:
+						# MariaDB 연동
+						db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+						cursor = db.cursor()
+						# 닉네임 값 존재여부 확인
+						cursor.execute("SELECT COUNT(*) FROM Accounts WHERE nickname='" + nickname + "'")
+						result = cursor.fetchone()
+					
+						if result[0] != 1:
+							able = False
+					except Exception as e:
+						print(e)
+
 				except:
 					self.DestroyClient(clientSocket)
 					print(addr, "과의 접속이 종료되었습니다")
@@ -60,7 +80,7 @@ class ServerSocket:
 
 			except ConnectionResetError:	# 클라이언트가 비정상적으로 종료된 경우
 				self.DestroyClient(clientSocket)
-				print(addr, "과의 접속이 종료되었습니다")
+				print(nickname, addr, "과의 접속이 종료되었습니다")
 				break
 
 			# 메시지 수신 플래그는 5002, 이 플래그를 전송 받은경우 모든 클라이언트에 메시지를 출력해준다
@@ -70,12 +90,18 @@ class ServerSocket:
 
 			# 접속 플래그는 1996, 이 플래그를 전송 받은 경우 모든 클라이언트에 접속 메시지를 출력해준다
 			elif message[0] == 1996:
-				print(addr, "에서 정식 클라이언트를 통해 접속하였습니다")
+				print(nickname, addr, "에서 정식 클라이언트를 통해 접속하였습니다")
 				self.__lock.acquire
 				self.__SocketList.append(clientSocket)
 				self.SendMessage(data)
 				self.__lock.release
 
+			# 접속 종료 플래그는 2015, 이 플래그를 전송 받은 경우 모든 클라이언트에 접속 종료 메시지를 출력해준다
+			elif message[0] == 2015:
+				print(nickname, addr, "이 접속종료를 요청하였습니다")
+				self.SendMessage(data)
+				self.DestroyClient(clientSocket)
+				break
 
 			# 이외의 검증되지 않은 플래그들은 접속을 종료한다
 			else:
