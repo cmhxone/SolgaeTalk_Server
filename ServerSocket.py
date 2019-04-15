@@ -57,7 +57,7 @@ class ServerSocket:
 				data = clientSocket.recv(self.__bufsize) # 클라이언트 소켓으로부터 메시지를 전달 받는다
 
 				try:
-					message = struct.unpack("I32s512s", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
+					message = struct.unpack("I32s512sIII", data) # 전달받은 메시지의 플래그 값과 메시지를 분석한다
 					nickname = message[1].decode().replace("\0", "")	# 메시지를 분석 해 닉네임 값을 저장한다
 				
 					try:
@@ -149,6 +149,9 @@ class ServerSocket:
 			except KeyboardInterrupt:	# Ctrl+C 키를 이용해 종료한 경우
 				self.__running = False
 				self.__socket.close()
+				db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+				cursor = db.cursor()
+				cursor.execute("UPDATE Accounts SET online=False")
 				#print("서버가 종료되었습니다")
 				exit(0)
 			
