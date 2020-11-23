@@ -62,7 +62,7 @@ class ServerSocket:
 				
 					try:
 						# MariaDB 연동
-						db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+						#db = pymysql.connect(host=self.__host, port=#Port, user=#DBUSER, passwd=#DBPASSWD, db=#DB_DATABASE, charset="utf8", autocommit=True)
 						cursor = db.cursor()
 						# 닉네임 값 존재여부 확인
 						cursor.execute("SELECT COUNT(*) FROM Accounts WHERE nickname='" + nickname + "'")
@@ -83,7 +83,7 @@ class ServerSocket:
 
 			except ConnectionResetError:	# 클라이언트가 비정상적으로 종료된 경우
 				self.DestroyClient(clientSocket)
-				db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+				#db = pymysql.connect(host=self.__host, port=#Port, user=#DBUSER, passwd=#DBPASSWD, db=#DB_DATABASE, charset="utf8", autocommit=True)
 				cursor = db.cursor()
 				cursor.execute("UPDATE Accounts SET online=False WHERE nickname='" + nickname +"'")
 				print(nickname, addr, "과의 접속이 종료되었습니다")
@@ -107,7 +107,7 @@ class ServerSocket:
 				print(nickname, addr, "이 접속종료를 요청하였습니다")
 				self.SendMessage(data)
 				self.DestroyClient(clientSocket)
-				db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+				#db = pymysql.connect(host=self.__host, port=#Port, user=#DBUSER, passwd=#DBPASSWD, db=#DB_DATABASE, charset="utf8", autocommit=True)
 				cursor = db.cursor()
 				cursor.execute("UPDATE Accounts SET online=False WHERE nickname='" + nickname +"'")
 				break
@@ -149,7 +149,7 @@ class ServerSocket:
 			except KeyboardInterrupt:	# Ctrl+C 키를 이용해 종료한 경우
 				self.__running = False
 				self.__socket.close()
-				db = pymysql.connect(host=self.__host, port=3306, user="Solgae", passwd="gntech2152", db="SolgaeTalk", charset="utf8", autocommit=True)
+				#db = pymysql.connect(host=self.__host, port=#Port, user=#DBUSER, passwd=#DBPASSWD, db=#DB_DATABASE, charset="utf8", autocommit=True)
 				cursor = db.cursor()
 				cursor.execute("UPDATE Accounts SET online=False")
 				print("서버가 종료되었습니다")
